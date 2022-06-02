@@ -1,56 +1,51 @@
 package writer
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/elastic/go-elasticsearch/v8"
 )
 
-type ESWriter struct{}
-
-func NewEsWriter() *ESWriter {
-	return &ESWriter{}
+type ESWriter struct {
+	ES        *elasticsearch.Client
+	indexName string
 }
 
-func (w *ESWriter) Run() {
-	es, err := elasticsearch.NewDefaultClient()
-	if err != nil {
-		panic(err)
+func NewEsWriter(indexName string, conf *elasticsearch.Config) *ESWriter {
+	if conf == nil {
+		conf = &elasticsearch.Config{}
 	}
-	fmt.Println(es)
+	es, err := elasticsearch.NewClient(*conf)
+	if err != nil {
+		return nil
+	}
+
+	res, err := es.Info()
+	if err != nil {
+		log.Fatalf("Error getting response: %s", err)
+	}
+	if res.IsError() {
+		log.Fatalf("Error: %s", res.String())
+	}
+
+	// es.Indices.Create(indexName, nil)
+	// var r map[string]interface{}
+	// if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+	// 	log.Fatalf("Error parsing the response body: %s", err)
+	// }
+	// // Print client and server version numbers.
+	// log.Printf("Client: %s", elasticsearch.Version)
+	// log.Printf("Server: %s", r["version"].(map[string]interface{})["number"])
+	// log.Println(strings.Repeat("~", 37))
+
+	return &ESWriter{ES: es, indexName: indexName}
 }
 
-func (w *ESWriter) Write(chunk []string) error {
-
-	addresses := []string{"http://127.0.0.1:9200", "http://127.0.0.1:9201"}
-	config := elasticsearch.Config{
-		Addresses: addresses,
-		Username:  "",
-		Password:  "",
-		CloudID:   "",
-		APIKey:    "",
-	}
-	// new client
-	es, err := elasticsearch.NewClient(config)
-	fmt.Println(err, "Error creating the client")
-	// Index creates or updates a document in an index
-	var buf bytes.Buffer
-	doc := map[string]interface{}{
-		"title":   "你看到外面的世界是什么样的？",
-		"content": "外面的世界真的很精彩",
-	}
-	if err := json.NewEncoder(&buf).Encode(doc); err != nil {
-		fmt.Println(err, "Error encoding doc")
-	}
-
-	res, err := es.Index("demo", &buf, es.Index.WithDocumentID("doc"))
-
-	if err != nil {
-		fmt.Println(err, "Error Index response")
-	}
-	defer res.Body.Close()
-	fmt.Println(res.String())
+func (w *ESWriter) Work(chunk []string) error {
+	//TODO:
+	// var buf bytes.Buffer
+	// for _, v := range chunk {
+	// 	buf.Write([]byte(v))
+	// }
 	return nil
 }
