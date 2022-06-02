@@ -7,6 +7,12 @@ import (
 	"path/filepath"
 )
 
+func MatchFileExt(ext string) func(os.FileInfo) bool {
+	return func(info os.FileInfo) bool {
+		return info.Name()[len(info.Name())-len(ext):] == ext
+	}
+}
+
 // recurse
 func WalkDirFiles(dir string, match func(os.FileInfo) bool) []string {
 	var files []string

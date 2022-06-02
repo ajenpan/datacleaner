@@ -17,7 +17,7 @@ func main() {
 
 	for _, f := range files {
 		c := make(chan string, 100)
-		go reader.NewTxtFile(f).Run(c)
+		go reader.NewByLine(f).Run(c)
 
 		for line := range c {
 			fmt.Println(line)
