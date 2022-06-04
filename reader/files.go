@@ -14,7 +14,7 @@ func MatchFileExt(ext string) func(os.FileInfo) bool {
 }
 
 // recurse
-func WalkDirFiles(dir string, match func(os.FileInfo) bool) []string {
+func Files(dir string, match func(os.FileInfo) bool) []string {
 	var files []string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
