@@ -1,18 +1,18 @@
 package utility
 
 import (
-	"crypto/sha1"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	mapset "github.com/deckarep/golang-set/v2"
+
+	"datacleaner/checksum"
 )
 
 type FileInfoWrapper struct {
@@ -182,58 +182,32 @@ func IsDirEmpty(path string) (bool, error) {
 	return false, err // Either not empty or error, suits both cases
 }
 
-func Sha1File(filePath string) []byte {
-	f, err := os.Open(filePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
+func RemoveSameFile(fpaths []string) {
+	total := len(fpaths)
 
-	h := sha1.New()
-	if _, err := io.Copy(h, f); err != nil {
-		log.Fatal(err)
-	}
-	return h.Sum(nil)
-}
+	store := make(map[string]string)
+	for i, fpath := range fpaths {
+		hash, err := checksum.SHA1File(fpath)
 
-func RemoveSameFiles(targetpath string) {
-	allfiles, err := AllFiles(targetpath)
-	if err != nil {
-		panic(err)
-	}
-
-	store := make(map[string][]*FileInfoWrapper)
-
-	for _, file := range allfiles {
-		info := file.Info
-		store[info.Name()] = append(store[info.Name()], &FileInfoWrapper{
-			Path: file.Path,
-			Info: info,
-		})
-	}
-
-	temp := make(map[string][]*FileInfoWrapper)
-	for k, v := range store {
-		if len(v) > 1 {
-			temp[k] = v
+		if err != nil {
+			fmt.Println("ERROR:", err)
 		}
-	}
 
-	for _, v := range temp {
-		keep := v[0]
-		sizeMap := make(map[int64]int)
-		sizeMap[keep.Info.Size()] = 0
+		if len(hash) <= 1 {
+			fmt.Println("ERROR: hash is empty ", fpath)
+			continue
+		}
 
-		for i := 1; i < len(v); i++ {
-			if repeati, has := sizeMap[v[i].Info.Size()]; has {
-				fmt.Println("remove: ", v[i].Path, "; 重复: ", v[repeati].Path)
-				err := os.Remove(v[i].Path)
-				if err != nil {
-					fmt.Println(err)
-				}
-			} else {
-				sizeMap[v[i].Info.Size()] = i
+		fmt.Printf("[%d/%d] hash:%v, path:%v\n", i+1, total, hash, fpath)
+
+		if v, ok := store[hash]; ok {
+			fmt.Println("remove", fpath, "sha1:", hash, "repeat with", v)
+			os.Remove(fpath)
+			if err != nil {
+				fmt.Println("ERROR:", err)
 			}
+		} else {
+			store[hash] = fpath
 		}
 	}
 }

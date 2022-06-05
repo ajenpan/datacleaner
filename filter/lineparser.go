@@ -1,13 +1,13 @@
-package cleaner
+package filter
 
 import (
+	"bytes"
 	"regexp"
 	"sort"
-	"strings"
 )
 
 type LineParser interface {
-	Parse(line string) (map[string]interface{}, bool)
+	Parse([]byte) (map[string]interface{}, bool)
 	// String() string
 }
 
@@ -37,12 +37,12 @@ type ParserScore struct {
 	Score  int    `json:"score"`
 }
 
-func GetParserScore(Lines []string) []*ParserScore {
+func GetParserScore(lines []string) []*ParserScore {
 	var res []*ParserScore
 	for k, v := range AllParser {
 		score := 0
-		for _, line := range Lines {
-			if _, done := v.Parse(line); done {
+		for _, line := range lines {
+			if _, done := v.Parse([]byte(line)); done {
 				score++
 			}
 		}
@@ -74,17 +74,21 @@ type SpliterBy struct {
 // 	return s.Name
 // }
 
-func (s *SpliterBy) Parse(line string) (map[string]interface{}, bool) {
+func (s *SpliterBy) Parse(line []byte) (map[string]interface{}, bool) {
+
 	if len(line) < len(s.By)*(len(s.Slot)-1) {
 		return nil, false
 	}
-	temp := strings.Split(line, s.By)
 
-	res := make([]string, 0, len(s.Slot))
+	temp := bytes.Split(line, []byte(s.By))
+	if len(temp) < len(s.Slot) {
+		return nil, false
+	}
 
+	res := make([][]byte, 0, len(s.Slot))
 	for _, v := range temp {
-		vv := strings.TrimSpace(v)
-		if len(vv) != 0 {
+		vv := bytes.TrimSpace(v)
+		if len(vv) > 0 {
 			res = append(res, vv)
 		}
 	}
@@ -93,9 +97,11 @@ func (s *SpliterBy) Parse(line string) (map[string]interface{}, bool) {
 		return nil, false
 	}
 
-	resMap := make(map[string]interface{})
+	resMap := make(map[string]interface{}, len(s.Slot)+1)
 	for i, v := range s.Slot {
-		resMap[v] = res[i]
+		resMap[v] = string(res[i])
 	}
+
+	resMap["_id"] = line
 	return resMap, true
 }

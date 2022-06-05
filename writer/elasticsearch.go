@@ -64,11 +64,18 @@ func (w *ESWriter) Write(line map[string]interface{}) error {
 		return err
 	}
 
+	id := ""
+	if v, ok := line["_id"]; ok {
+		id, _ = v.(string)
+		delete(line, "_id")
+	}
+
 	err = w.BI.Add(
 		context.Background(),
 		esutil.BulkIndexerItem{
 			// Action field configures the operation to perform (index, create, delete, update)
-			Action: "create",
+			Action:     "index",
+			DocumentID: id,
 			// Body is an `io.Reader` with the payload
 			Body: bytes.NewReader(b),
 			// OnSuccess is called for each successful operation

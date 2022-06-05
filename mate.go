@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"datacleaner/cleaner"
+	"datacleaner/filter"
 	"datacleaner/reader"
 	"datacleaner/utility"
 )
@@ -39,15 +39,18 @@ func ReadFileMate(fp string) (*FileMate, error) {
 }
 
 type FileMate struct {
-	RandomLines   []string               `json:"random_lines"`
-	FilePath      string                 `json:"file_path"`
-	FileSize      int64                  `json:"file_size"`
-	FileHumanSize string                 `json:"file_human_size"`
-	CreateTime    string                 `json:"create_time"`
-	ParserScore   []*cleaner.ParserScore `json:"parser_score"`
-	BestParser    string                 `json:"best_parser"`
-	Stat          string                 `json:"finish"`
-	Msg           string                 `json:"msg"`
+	RandomLines   []string              `json:"random_lines"`
+	FilePath      string                `json:"file_path"`
+	FileSize      int64                 `json:"file_size"`
+	FileHumanSize string                `json:"file_human_size"`
+	CreateTime    string                `json:"create_time"`
+	ParserScore   []*filter.ParserScore `json:"parser_score"`
+	BestParser    string                `json:"best_parser"`
+
+	StartAt  string `json:"start_at"`
+	FinishAt string `json:"finish_at"`
+	Stat     string `json:"stat"`
+	Msg      string `json:"msg"`
 
 	// SuccessRecords in     `json:"success_records"`
 }
@@ -91,10 +94,18 @@ func genFileMate(filepath string) (*FileMate, error) {
 		FileSize:      mate.FileSize,
 		FileHumanSize: utility.ByteCountIEC(mate.FileSize),
 		CreateTime:    mate.CreateTime.Format("2006-01-02 15:04:05"),
-		ParserScore:   cleaner.GetParserScore(mate.RandomLines),
 	}
+
+	temp := filter.GetParserScore(mate.RandomLines)
+	for _, v := range temp {
+		if v.Score > 0 {
+			ret.ParserScore = append(ret.ParserScore, v)
+		}
+	}
+
 	if len(ret.ParserScore) > 0 && ret.ParserScore[0].Score > 10 {
 		ret.BestParser = ret.ParserScore[0].Parser
 	}
+
 	return ret, nil
 }
