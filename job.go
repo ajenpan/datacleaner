@@ -15,12 +15,6 @@ import (
 )
 
 type job struct {
-	// fileMate *FileMate
-
-	// c cleaner.LineParser
-	// r reader.Reader
-	// w writer.Writer
-
 	Name           string   `json:"name"`
 	Targets        []string `json:"targets"`
 	TotalSize      int64    `json:"total_size"`
@@ -135,7 +129,7 @@ func (j *job) Run() error {
 		startAt := time.Now()
 		var lErr error
 
-		reader := make(chan []byte, 1000)
+		reader := make(chan string, 1000)
 		writer := make(chan map[string]interface{}, 1000)
 
 		sy := &sync.WaitGroup{}
@@ -156,7 +150,7 @@ func (j *job) Run() error {
 				}
 
 				readCount++
-				reader <- line
+				reader <- string(line)
 			}
 		}()
 
@@ -168,10 +162,10 @@ func (j *job) Run() error {
 				if len(line) == 0 {
 					continue
 				}
-				res, ok := c.Parse(line)
-				if ok && res != nil {
+				res, ok := c.Do(filter.NewElement(line))
+				if ok && res != nil && res.Data != nil {
 					parseCount++
-					writer <- res
+					writer <- res.Data
 				}
 			}
 		}()

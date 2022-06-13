@@ -106,7 +106,7 @@ func DecompressionAll(tagetDir string, failedDir string) {
 		suffix := []byte(ext)
 		suffix[0] = '_'
 		outPath := strings.TrimSuffix(path, ext) + string(suffix)
-
+		//todo: support 7z for linux
 		cmd := exec.Command("C:\\Program Files\\7-Zip\\7z.exe", "x", path, "-o"+outPath)
 
 		if err := cmd.Run(); err != nil {
