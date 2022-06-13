@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm/clause"
 	gormlogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+
+	"datacleaner/object"
 )
 
 type GormWriter struct {
@@ -69,7 +71,7 @@ func NewGormWriter(dsn string) (*GormWriter, error) {
 	return ret, nil
 }
 
-func (w *GormWriter) Write(line map[string]interface{}) error {
+func (w *GormWriter) Write(line object.Object) error {
 	w.cache <- line
 	return nil
 }

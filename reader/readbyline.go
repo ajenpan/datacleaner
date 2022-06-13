@@ -2,6 +2,7 @@ package reader
 
 import (
 	"bufio"
+	"datacleaner/object"
 	"io"
 	"os"
 
@@ -39,9 +40,11 @@ func (r *ByLine) Close() error {
 	return nil
 }
 
-func (r *ByLine) Read() ([]byte, error) {
+func (r *ByLine) Read() (object.Object, error) {
 	if r.scanner.Scan() {
-		return r.scanner.Bytes(), nil
+		ret := object.New()
+		ret["line"] = r.scanner.Text()
+		return ret, nil
 	}
 	if r.scanner.Err() != nil {
 		return nil, r.scanner.Err()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"datacleaner/filter"
+	"datacleaner/object"
 	"datacleaner/reader"
 	"datacleaner/utility"
 	"datacleaner/writer"
@@ -129,8 +130,8 @@ func (j *job) Run() error {
 		startAt := time.Now()
 		var lErr error
 
-		reader := make(chan string, 1000)
-		writer := make(chan map[string]interface{}, 1000)
+		reader := make(chan object.Object, 1000)
+		writer := make(chan object.Object, 1000)
 
 		sy := &sync.WaitGroup{}
 		sy.Add(3)
@@ -150,7 +151,7 @@ func (j *job) Run() error {
 				}
 
 				readCount++
-				reader <- string(line)
+				reader <- line
 			}
 		}()
 
@@ -162,10 +163,10 @@ func (j *job) Run() error {
 				if len(line) == 0 {
 					continue
 				}
-				res, ok := c.Do(filter.NewElement(line))
-				if ok && res != nil && res.Data != nil {
+				res, ok := c.Do(line)
+				if ok && res != nil {
 					parseCount++
-					writer <- res.Data
+					writer <- res
 				}
 			}
 		}()

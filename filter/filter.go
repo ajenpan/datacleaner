@@ -1,17 +1,11 @@
 package filter
 
+import (
+	"datacleaner/object"
+)
+
 type Filter interface {
-	Do(in *Element) (*Element, bool)
-}
-
-type Element struct {
-	Data map[string]interface{}
-}
-
-func NewElement(raw string) *Element {
-	data := make(map[string]interface{})
-	data["_raw"] = raw
-	return &Element{Data: data}
+	Do(in object.Object) (object.Object, bool)
 }
 
 func NewMultiple(filters ...Filter) Filter {
@@ -22,9 +16,10 @@ type Multiple struct {
 	Filters []Filter
 }
 
-func (f *Multiple) Do(in *Element) (*Element, bool) {
+func (f *Multiple) Do(in object.Object) (object.Object, bool) {
+	var ok bool
 	for _, filter := range f.Filters {
-		if in, ok := filter.Do(in); !ok {
+		if in, ok = filter.Do(in); !ok {
 			return in, false
 		}
 	}
@@ -36,8 +31,8 @@ type Drop struct {
 	Condition func(interface{}) bool
 }
 
-func (f *Drop) Do(in *Element) (*Element, bool) {
-	if f.Condition(in.Data[f.Field]) {
+func (f *Drop) Do(in object.Object) (object.Object, bool) {
+	if f.Condition(in[f.Field]) {
 		return in, false
 	}
 	return in, true
@@ -56,14 +51,14 @@ func NotEqual(target interface{}) func(interface{}) bool {
 }
 
 type Custom struct {
-	C func(in *Element) (*Element, bool)
+	C func(in object.Object) (object.Object, bool)
 }
 
-func (f *Custom) Do(in *Element) (*Element, bool) {
+func (f *Custom) Do(in object.Object) (object.Object, bool) {
 	return f.C(in)
 }
 
-func NewCustom(f func(in *Element) (*Element, bool)) Filter {
+func NewCustom(f func(in object.Object) (object.Object, bool)) Filter {
 	return &Custom{C: f}
 }
 
@@ -71,9 +66,9 @@ type FieldsDelete struct {
 	Fields []string
 }
 
-func (f *FieldsDelete) Do(in *Element) (*Element, bool) {
+func (f *FieldsDelete) Do(in object.Object) (object.Object, bool) {
 	for _, v := range f.Fields {
-		delete(in.Data, v)
+		delete(in, v)
 	}
 	return in, true
 }
@@ -90,10 +85,10 @@ type FieldsRetain struct {
 	Fields map[string]struct{}
 }
 
-func (f *FieldsRetain) Do(in *Element) (*Element, bool) {
-	for k := range in.Data {
+func (f *FieldsRetain) Do(in object.Object) (object.Object, bool) {
+	for k := range in {
 		if _, ok := f.Fields[k]; !ok {
-			delete(in.Data, k)
+			delete(in, k)
 		}
 	}
 	return in, true

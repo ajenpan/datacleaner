@@ -1,6 +1,8 @@
 package writer
 
+import "datacleaner/object"
+
 type Writer interface {
-	Write(line map[string]interface{}) error
+	Write(object.Object) error
 	Close() error
 }

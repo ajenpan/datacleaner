@@ -2,6 +2,8 @@ package filter
 
 import (
 	"strings"
+
+	"datacleaner/object"
 )
 
 type SplitBy struct {
@@ -16,20 +18,20 @@ type SplitBy struct {
 // 	return s.Name
 // }
 
-func (s *SplitBy) Do(in *Element) (*Element, bool) {
+func (s *SplitBy) Do(in object.Object) (object.Object, bool) {
 	field := s.Field
 	if field == "" {
 		field = "_raw"
 	}
 
-	res, ok := s.Parse(in.Data[field])
+	res, ok := s.Parse(in[field])
 
 	if !ok {
 		return in, false
 	}
 
 	for k, v := range res {
-		in.Data[k] = v
+		in[k] = v
 	}
 
 	return in, true

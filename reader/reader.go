@@ -1,6 +1,8 @@
 package reader
 
+import "datacleaner/object"
+
 type Reader interface {
-	Read() ([]byte, error)
+	Read() (object.Object, error)
 	Close() error
 }

@@ -3,6 +3,8 @@ package filter
 import (
 	"regexp"
 	"sort"
+
+	"datacleaner/object"
 )
 
 var AllParser = map[string]Filter{
@@ -37,7 +39,8 @@ func GetParserScore(lines []string) []*ParserScore {
 	for k, v := range AllParser {
 		score := 0
 		for _, line := range lines {
-			e := NewElement(line)
+			e := object.New()
+			e["_raw"] = line
 			if _, ok := v.Do(e); ok {
 				score++
 			}
