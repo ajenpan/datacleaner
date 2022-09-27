@@ -10,7 +10,7 @@ import (
 
 	"datacleaner/filter"
 	"datacleaner/reader"
-	"datacleaner/utility"
+	"datacleaner/utils"
 )
 
 func ReadFileMate(fp string) (*FileMate, error) {
@@ -92,7 +92,7 @@ func genFileMate(filepath string) (*FileMate, error) {
 		RandomLines:   mate.RandomLines,
 		FilePath:      mate.FilePath,
 		FileSize:      mate.FileSize,
-		FileHumanSize: utility.ByteCountIEC(mate.FileSize),
+		FileHumanSize: utils.ByteCountIEC(mate.FileSize),
 		CreateTime:    mate.CreateTime.Format("2006-01-02 15:04:05"),
 	}
 

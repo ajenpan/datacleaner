@@ -1,11 +1,6 @@
 package main
 
 import (
-	"datacleaner/filter"
-	"datacleaner/object"
-	"datacleaner/reader"
-	"datacleaner/utility"
-	"datacleaner/writer"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +8,12 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"datacleaner/filter"
+	"datacleaner/object"
+	"datacleaner/reader"
+	"datacleaner/utils"
+	"datacleaner/writer"
 )
 
 type job struct {
@@ -36,7 +37,7 @@ func JobPath(name string) string {
 
 func NewJob(name string, targets []string) (*job, error) {
 	jobpath := JobPath(name)
-	exist, err := utility.FileExists(jobpath)
+	exist, err := utils.FileExists(jobpath)
 
 	if exist {
 		raw, err := os.ReadFile(jobpath)
@@ -72,7 +73,7 @@ func NewJob(name string, targets []string) (*job, error) {
 		j.TotalSize += mate.FileSize
 	}
 
-	j.TotalHumanSize = utility.ByteCountIEC(j.TotalSize)
+	j.TotalHumanSize = utils.ByteCountIEC(j.TotalSize)
 
 	if err := j.Store(); err != nil {
 		fmt.Println("store job error:", err)
